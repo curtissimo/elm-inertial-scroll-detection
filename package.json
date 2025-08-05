@@ -1,0 +1,19 @@
+{
+  "name": "@curtissimo/elm-inertial-scroll-detection",
+  "version": "1.0.0",
+  "description": "An event-driven state machine to detect inertial scrolling.",
+  "devDependencies": {
+    "elm-doc-preview": "^6.0.1",
+    "elm-review": "^2.10.3",
+    "elm-test": "^0.19.1-revision9",
+    "elm-tooling": "^1.15.0",
+    "elm-verify-examples": "^6.0.3",
+    "prettier": "^3.2.5"
+  },
+  "scripts": {
+    "test": "elm-verify-examples --run-tests && elm-test",
+    "postinstall": "elm-tooling install"
+  },
+  "author": "Curtis Schlak",
+  "license": "BSD-3-Clause"
+}
