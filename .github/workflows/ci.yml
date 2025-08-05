@@ -71,13 +71,13 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path-to-elm: ./node_modules/.bin/elm
-      - run: npm run build
-      - id: npm-publish
-        if: github.ref == 'refs/heads/main'
-        uses: JS-DevTools/npm-publish@v3
-        with:
-          token: ${{ secrets.NPM_TOKEN }}
-          access: public
+      # - run: npm run build
+      # - id: npm-publish
+      #   if: github.ref == 'refs/heads/main'
+      #   uses: JS-DevTools/npm-publish@v3
+      #   with:
+      #     token: ${{ secrets.NPM_TOKEN }}
+      #     access: public
       - name: Generate elm-doc-preview
         uses: EndBug/add-and-commit@v5
         with:
