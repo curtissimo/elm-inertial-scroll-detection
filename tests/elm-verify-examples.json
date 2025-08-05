@@ -1,6 +1,6 @@
 {
   "tests": [
-    "Curtissimo.InterialScrollDetector",
+    "Curtissimo.IntertialScrollDetector",
     "./README.md"
   ]
 }
