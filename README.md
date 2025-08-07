@@ -7,7 +7,7 @@ If so, then this package is for you!
 
 ## Examples
 
-Check out the `Scrolling` example in `./examples`.
+Check out the `Scroll` example in `./examples`.
 
 ## Scrollable HTML elements
 

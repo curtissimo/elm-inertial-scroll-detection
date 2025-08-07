@@ -1,6 +1,6 @@
 module Curtissimo.IntertialScrollDetector exposing
     ( onInertialScroll, init, update
-    , InertialDirection(..), inertialScrollX, inertialScrollY, scrollLeft, scrollTop
+    , InertialDirection(..), inertialX, inertialY, stickyX, stickyY, scrollLeft, scrollTop
     , Msg, ScrollState
     )
 
@@ -19,7 +19,7 @@ This is the directed state diagram for the inertial scroll detector.
 
 # Usage
 
-@docs InertialDirection, inertialScrollX, inertialScrollY, scrollLeft, scrollTop
+@docs InertialDirection, inertialX, inertialY, stickyX, stickyY, scrollLeft, scrollTop
 
 
 # Opaque types
@@ -34,19 +34,21 @@ import Json.Decode
 
 
 type alias DataValue =
-    { isTouched : Bool
-    , wasMoved : Bool
+    { current : EventData
+    , directionX : InertialDirection
+    , directionY : InertialDirection
+    , isTouched : Bool
     , previous : EventData
-    , current : EventData
+    , stickyX : InertialDirection
+    , stickyY : InertialDirection
+    , wasMoved : Bool
     }
 
 
 type alias EventData =
-    { x : Int
+    { timeStamp : Int
+    , x : Int
     , y : Int
-    , timeStamp : Int
-    , directionX : InertialDirection
-    , directionY : InertialDirection
     }
 
 
@@ -69,7 +71,7 @@ type Msg
     = Scroll EventData
     | ScrollEnd EventData
     | TouchEnd
-    | TouchMove
+    | TouchMove EventData
     | TouchStart
 
 
@@ -83,31 +85,44 @@ defaultValues :
     Int
     -> Int
     ->
-        { isTouched : Bool
-        , wasMoved : Bool
+        { current : EventData
+        , directionX : InertialDirection
+        , directionY : InertialDirection
+        , isTouched : Bool
         , previous : EventData
-        , current : EventData
+        , stickyX : InertialDirection
+        , stickyY : InertialDirection
+        , wasMoved : Bool
         }
 defaultValues x y =
-    { isTouched = False
+    { current = { x = x, y = y, timeStamp = eventWindow }
+    , directionX = Still
+    , directionY = Still
+    , isTouched = False
+    , previous = { x = 0, y = 0, timeStamp = 0 }
+    , stickyX = Still
+    , stickyY = Still
     , wasMoved = False
-    , previous = { x = 0, y = 0, timeStamp = 0, directionX = Still, directionY = Still }
-    , current = { x = x, y = y, timeStamp = eventWindow, directionX = Still, directionY = Still }
     }
+
+
+eventWindow : Int
+eventWindow =
+    1000
 
 
 {-| Get the current inertial scroll in the X (horizontal) direction.
 -}
-inertialScrollX : ScrollState -> InertialDirection
-inertialScrollX (ScrollState data) =
-    data.current.directionX
+inertialX : ScrollState -> InertialDirection
+inertialX (ScrollState data) =
+    data.directionX
 
 
 {-| Get the current inertial scroll in the Y (vertical) direction.
 -}
-inertialScrollY : ScrollState -> InertialDirection
-inertialScrollY (ScrollState data) =
-    data.current.directionY
+inertialY : ScrollState -> InertialDirection
+inertialY (ScrollState data) =
+    data.directionY
 
 
 {-| Initialize a [`ScrollState`](#ScrollState) from current
@@ -169,26 +184,23 @@ pairWith b a =
     ( a, b )
 
 
-scrollDecoder : (Msg -> msg) -> Json.Decode.Decoder ( msg, Bool )
-scrollDecoder contentMsg =
-    Json.Decode.map5 EventData
-        (Json.Decode.at [ "target", "scrollLeft" ] Json.Decode.int)
-        (Json.Decode.at [ "target", "scrollTop" ] Json.Decode.int)
+eventDecoder : (EventData -> Msg) -> (Msg -> msg) -> Json.Decode.Decoder ( msg, Bool )
+eventDecoder msg contentMsg =
+    Json.Decode.map3 EventData
         (Json.Decode.at [ "timeStamp" ] Json.Decode.int)
-        (Json.Decode.succeed Still)
-        (Json.Decode.succeed Still)
-        |> Json.Decode.andThen (Scroll >> contentMsg >> pairWith False >> Json.Decode.succeed)
+        (Json.Decode.at [ "currentTarget", "scrollLeft" ] Json.Decode.int)
+        (Json.Decode.at [ "currentTarget", "scrollTop" ] Json.Decode.int)
+        |> Json.Decode.andThen (msg >> contentMsg >> pairWith False >> Json.Decode.succeed)
+
+
+scrollDecoder : (Msg -> msg) -> Json.Decode.Decoder ( msg, Bool )
+scrollDecoder =
+    eventDecoder Scroll
 
 
 scrollEndDecoder : (Msg -> msg) -> Json.Decode.Decoder ( msg, Bool )
-scrollEndDecoder contentMsg =
-    Json.Decode.map5 EventData
-        (Json.Decode.at [ "target", "scrollLeft" ] Json.Decode.int)
-        (Json.Decode.at [ "target", "scrollTop" ] Json.Decode.int)
-        (Json.Decode.at [ "timeStamp" ] Json.Decode.int)
-        (Json.Decode.succeed Still)
-        (Json.Decode.succeed Still)
-        |> Json.Decode.andThen (ScrollEnd >> contentMsg >> pairWith False >> Json.Decode.succeed)
+scrollEndDecoder =
+    eventDecoder ScrollEnd
 
 
 {-| Get the current left scroll position from the latest inertial scroll.
@@ -205,9 +217,24 @@ scrollTop (ScrollState { current }) =
     current.y
 
 
-eventWindow : Int
-eventWindow =
-    1000
+{-| Get the last non-`Still` inertial scroll in the X (horizontal) direction.
+
+Will return `Still` if the scrollable area has never moved.
+
+-}
+stickyX : ScrollState -> InertialDirection
+stickyX (ScrollState data) =
+    data.stickyX
+
+
+{-| Get the last non-`Still` inertial scroll in the Y (vertical) direction.
+
+Will return `Still` if the scrollable area has never moved.
+
+-}
+stickyY : ScrollState -> InertialDirection
+stickyY (ScrollState data) =
+    data.stickyY
 
 
 touchEndDecoder : (Msg -> msg) -> Json.Decode.Decoder ( msg, Bool )
@@ -216,8 +243,8 @@ touchEndDecoder contentMsg =
 
 
 touchMoveDecoder : (Msg -> msg) -> Json.Decode.Decoder ( msg, Bool )
-touchMoveDecoder contentMsg =
-    Json.Decode.succeed ( contentMsg TouchMove, False )
+touchMoveDecoder =
+    eventDecoder TouchMove
 
 
 touchStartDecoder : (Msg -> msg) -> Json.Decode.Decoder ( msg, Bool )
@@ -250,39 +277,63 @@ update msg (ScrollState model) =
 
             else
                 let
-                    ( current, wasMoved ) =
+                    { directionX, directionY, stickyX_, stickyY_, wasMoved } =
                         updateData data model
                 in
                 ScrollState
                     { model
-                        | previous = model.current
-                        , current = current
+                        | current = data
+                        , directionX = directionX
+                        , directionY = directionY
+                        , previous = model.current
+                        , stickyX = stickyX_
+                        , stickyY = stickyY_
                         , wasMoved = wasMoved
                     }
 
         ScrollEnd data ->
-            let
-                ( current, _ ) =
-                    updateData data model
-            in
             ScrollState
                 { model
                     | wasMoved = False
                     , previous = model.current
-                    , current = current
+                    , current = data
+                    , directionX = Still
+                    , directionY = Still
                 }
 
         TouchEnd ->
             ScrollState { model | isTouched = False }
 
-        TouchMove ->
-            ScrollState { model | wasMoved = True }
+        TouchMove data ->
+            let
+                { directionX, directionY, stickyX_, stickyY_ } =
+                    updateData data model
+            in
+            ScrollState
+                { model
+                    | wasMoved = True
+                    , previous = model.current
+                    , current = data
+                    , directionX = directionX
+                    , directionY = directionY
+                    , stickyX = stickyX_
+                    , stickyY = stickyY_
+                }
 
         TouchStart ->
             ScrollState { model | isTouched = True, wasMoved = False }
 
 
-updateData : EventData -> DataValue -> ( EventData, Bool )
+updateData :
+    EventData
+    -> DataValue
+    ->
+        { directionX : InertialDirection
+        , directionY : InertialDirection
+        , stickyX_ : InertialDirection
+        , stickyY_ : InertialDirection
+        , wasMoved : Bool
+        }
 updateData data model =
     let
         inWindow =
@@ -302,7 +353,7 @@ updateData data model =
                 Positive
 
             else
-                model.current.directionX
+                Still
 
         directionY =
             if trackDirection && data.y - model.current.y < 0 then
@@ -312,9 +363,27 @@ updateData data model =
                 Positive
 
             else
-                model.current.directionY
+                Still
 
-        current =
-            { data | directionX = directionX, directionY = directionY }
+        stickyX_ =
+            case directionX of
+                Still ->
+                    model.stickyX
+
+                _ ->
+                    directionX
+
+        stickyY_ =
+            case directionY of
+                Still ->
+                    model.stickyY
+
+                _ ->
+                    directionY
     in
-    ( current, wasMoved )
+    { directionX = directionX
+    , directionY = directionY
+    , stickyX_ = stickyX_
+    , stickyY_ = stickyY_
+    , wasMoved = wasMoved
+    }
