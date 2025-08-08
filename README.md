@@ -7,7 +7,11 @@ If so, then this package is for you!
 
 ## Examples
 
-Check out the `Scroll` example in `./examples`.
+Check out the `Scroll` live example on 
+[GitLab Pages](https://elm-inertial-scroll-detection-9e103d.gitlab.io/).
+
+Or, check out the 
+[./examples/README.md](https://gitlab.com/curtissimo/elm-inertial-scroll-detection/-/tree/2.0.1/examples).
 
 ## Scrollable HTML elements
 
