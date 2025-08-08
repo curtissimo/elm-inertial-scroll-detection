@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Inertial Scrolling Detector Example</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css"
+    >
+    <link rel="icon" href="https://guide.elm-lang.org/gitbook/images/favicon.ico">
+    <script src="main.js"></script>
+    <style>
+      html, body {
+        font-size: 18px;
+      }
+
+      .is-scrollable {
+        border: 1px solid rgba(0 0 0 / 0.3);
+        height: 40vh;
+        overflow: auto;
+        white-space: nowrap;
+        user-select: none;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="elm"></div>
+    <script>const app = Elm.Scroll.init({ node: document.getElementById("elm") });</script>
+  </body>
+</html>

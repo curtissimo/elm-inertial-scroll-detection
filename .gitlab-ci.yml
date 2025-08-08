@@ -1,0 +1,21 @@
+default:
+  image: debian
+  before_script:
+    - curl -L -o elm.gz https://github.com/elm/compiler/releases/download/0.19.1/binary-for-linux-64-bit.gz
+    - gunzip elm.gz
+    - chmod +x elm
+    - mkdir -p /opt/elm
+    - mv elm /opt/elm/elm
+  cache:
+    key: elm19-1
+    paths:
+      - /opt/elm/elm
+
+pages:
+  script:
+    - cd examples
+    - /opt/elm/elm make --output=../public/main.js src/Scroll.elm
+    - cd ..
+  artifacts:
+    paths:
+      - public

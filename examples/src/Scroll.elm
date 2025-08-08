@@ -60,35 +60,45 @@ view model =
         , Html.node "style" [] [ Html.text style ]
         , Html.section [ Attrs.class "section content" ]
             [ Html.div [ Attrs.class "container" ]
-                [ Html.h1
-                    []
-                    [ Html.text "Inertial Scroll Detection" ]
-                , Html.p
-                    []
-                    [ Html.text "Below is a scrollable box. On your touch device, scroll around by "
-                    , Html.em [] [ Html.text "flicking" ]
-                    , Html.text " the content to make it inertially scroll."
-                    ]
-                , Html.div [ Attrs.class "columns is-mobile" ]
-                    [ Html.div [ Attrs.class "column" ]
-                        [ Html.div [ Attrs.class "has-text-weight-bold" ] [ Html.text "Horiz" ]
-                        , Html.div [] [ Html.text "scrollLeft: ", Html.text (String.fromInt (Detector.scrollLeft model.scrollState)) ]
-                        , Html.div [] [ Html.text "inertialX: ", Html.text (Detector.inertialX model.scrollState |> directionToString) ]
-                        , Html.div [] [ Html.text "stickyX: ", Html.text (Detector.stickyX model.scrollState |> directionToString) ]
+                [ Html.div
+                    [ Attrs.class "columns is-centered" ]
+                    [ Html.div [ Attrs.class "column is-half" ]
+                        [ Html.h1
+                            []
+                            [ Html.text "Inertial Scroll Detection" ]
+                        , Html.p
+                            []
+                            [ Html.text "Below is a scrollable box. On your touch device, scroll around by "
+                            , Html.em [] [ Html.text "flicking" ]
+                            , Html.text " the content to make it inertially scroll."
+                            ]
                         ]
-                    , Html.div [ Attrs.class "column" ]
-                        [ Html.div [ Attrs.class "has-text-weight-bold" ] [ Html.text "Vert" ]
-                        , Html.div [] [ Html.text "scrollTop: ", Html.text (String.fromInt (Detector.scrollTop model.scrollState)) ]
-                        , Html.div [] [ Html.text "inertialY: ", Html.text (Detector.inertialY model.scrollState |> directionToString) ]
-                        , Html.div [] [ Html.text "stickyY: ", Html.text (Detector.stickyY model.scrollState |> directionToString) ]
+                    ]
+                , Html.div
+                    [ Attrs.class "columns is-centered" ]
+                    [ Html.div [ Attrs.class "column is-half" ]
+                        [ Html.div [ Attrs.class "columns is-mobile" ]
+                            [ Html.div [ Attrs.class "column" ]
+                                [ Html.div [ Attrs.class "has-text-weight-bold" ] [ Html.text "Horiz" ]
+                                , Html.div [] [ Html.text "scrollLeft: ", Html.text (String.fromInt (Detector.scrollLeft model.scrollState)) ]
+                                , Html.div [] [ Html.text "inertialX: ", Html.text (Detector.inertialX model.scrollState |> directionToString) ]
+                                , Html.div [] [ Html.text "stickyX: ", Html.text (Detector.stickyX model.scrollState |> directionToString) ]
+                                ]
+                            , Html.div [ Attrs.class "column" ]
+                                [ Html.div [ Attrs.class "has-text-weight-bold" ] [ Html.text "Vert" ]
+                                , Html.div [] [ Html.text "scrollTop: ", Html.text (String.fromInt (Detector.scrollTop model.scrollState)) ]
+                                , Html.div [] [ Html.text "inertialY: ", Html.text (Detector.inertialY model.scrollState |> directionToString) ]
+                                , Html.div [] [ Html.text "stickyY: ", Html.text (Detector.stickyY model.scrollState |> directionToString) ]
+                                ]
+                            ]
                         ]
                     ]
                 , Html.div
                     [ Attrs.class "columns is-centered" ]
                     [ Html.div [ Attrs.class "column is-half" ]
                         [ Html.div
-                            ([ Attrs.class "is-scrollable content" ]
-                                ++ Detector.onInertialScroll Scrolled
+                            (Attrs.class "is-scrollable content"
+                                :: Detector.onInertialScroll Scrolled
                             )
                             (List.repeat 100 (Html.p [] [ Html.text longText ]))
                         ]
