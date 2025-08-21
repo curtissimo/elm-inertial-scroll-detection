@@ -1,6 +1,7 @@
 module Curtissimo.IntertialScrollDetector exposing
     ( onInertialScroll, init, update
     , InertialDirection(..), inertialX, inertialY, stickyX, stickyY, scrollLeft, scrollTop
+    , map
     , Msg, ScrollState
     )
 
@@ -20,6 +21,11 @@ This is the directed state diagram for the inertial scroll detector.
 # Usage
 
 @docs InertialDirection, inertialX, inertialY, stickyX, stickyY, scrollLeft, scrollTop
+
+
+# Mapping
+
+@docs map
 
 
 # Opaque types
@@ -226,6 +232,93 @@ init left top toContentMsg =
         , timestamp = -1
         , toContentMsg = toContentMsg
         }
+
+
+{-| Map a [`ScrollState`](#ScrollState) from one msg type
+to another.
+-}
+map : (msg1 -> msg2) -> ScrollState msg1 -> ScrollState msg2
+map toMsg state =
+    case state of
+        InertialStarted data ->
+            let
+                horizontal =
+                    data.horizontal
+
+                vertical =
+                    data.vertical
+            in
+            InertialStarted
+                { count = data.count
+                , horizontal = horizontal
+                , vertical = vertical
+                , timestamp = data.timestamp
+                , toContentMsg = data.toContentMsg >> toMsg
+                }
+
+        Inertial data ->
+            let
+                horizontal =
+                    data.horizontal
+
+                vertical =
+                    data.vertical
+            in
+            Inertial
+                { count = data.count
+                , horizontal = horizontal
+                , vertical = vertical
+                , timestamp = data.timestamp
+                , toContentMsg = data.toContentMsg >> toMsg
+                }
+
+        Monitoring data ->
+            let
+                horizontal =
+                    data.horizontal
+
+                vertical =
+                    data.vertical
+            in
+            Monitoring
+                { count = data.count
+                , horizontal = horizontal
+                , vertical = vertical
+                , timestamp = data.timestamp
+                , toContentMsg = data.toContentMsg >> toMsg
+                }
+
+        Moved data ->
+            let
+                horizontal =
+                    data.horizontal
+
+                vertical =
+                    data.vertical
+            in
+            Moved
+                { count = data.count
+                , horizontal = horizontal
+                , vertical = vertical
+                , timestamp = data.timestamp
+                , toContentMsg = data.toContentMsg >> toMsg
+                }
+
+        Touched data ->
+            let
+                horizontal =
+                    data.horizontal
+
+                vertical =
+                    data.vertical
+            in
+            Touched
+                { count = data.count
+                , horizontal = horizontal
+                , vertical = vertical
+                , timestamp = data.timestamp
+                , toContentMsg = data.toContentMsg >> toMsg
+                }
 
 
 {-| Adds the following passive event listeners to the scrollable area.
