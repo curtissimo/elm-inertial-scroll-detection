@@ -8,10 +8,11 @@ import Html.Attributes as Attrs
 
 main : Program () Model Msg
 main =
-    Browser.sandbox
+    Browser.element
         { init = init
-        , view = view
+        , subscriptions = \_ -> Sub.none
         , update = update
+        , view = view
         }
 
 
@@ -20,12 +21,14 @@ type Msg
 
 
 type alias Model =
-    { scrollState : Detector.ScrollState }
+    { scrollState : Detector.ScrollState Msg }
 
 
-init : Model
-init =
-    { scrollState = Detector.init 0 0 }
+init : () -> ( Model, Cmd Msg )
+init _ =
+    ( { scrollState = Detector.init 0 0 Scrolled }
+    , Cmd.none
+    )
 
 
 directionToString : Detector.InertialDirection -> String
@@ -41,11 +44,17 @@ directionToString direction =
             "Still"
 
 
-update : Msg -> Model -> Model
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Scrolled scrollMsg ->
-            { model | scrollState = Detector.update scrollMsg model.scrollState }
+            let
+                ( scrollState, cmd ) =
+                    Detector.update scrollMsg model.scrollState
+            in
+            ( { model | scrollState = scrollState }
+            , cmd
+            )
 
 
 view : Model -> Html Msg
@@ -80,15 +89,15 @@ view model =
                         [ Html.div [ Attrs.class "columns is-mobile" ]
                             [ Html.div [ Attrs.class "column" ]
                                 [ Html.div [ Attrs.class "has-text-weight-bold" ] [ Html.text "Horiz" ]
-                                , Html.div [] [ Html.text "scrollLeft: ", Html.text (String.fromInt (Detector.scrollLeft model.scrollState)) ]
-                                , Html.div [] [ Html.text "inertialX: ", Html.text (Detector.inertialX model.scrollState |> directionToString) ]
-                                , Html.div [] [ Html.text "stickyX: ", Html.text (Detector.stickyX model.scrollState |> directionToString) ]
+                                , Html.div [] [ Html.text "scrollLeft: ", Html.br [] [], Html.text (String.fromInt (Detector.scrollLeft model.scrollState)) ]
+                                , Html.div [] [ Html.text "inertialX: ", Html.br [] [], Html.text (Detector.inertialX model.scrollState |> directionToString) ]
+                                , Html.div [] [ Html.text "stickyX: ", Html.br [] [], Html.text (Detector.stickyX model.scrollState |> directionToString) ]
                                 ]
                             , Html.div [ Attrs.class "column" ]
                                 [ Html.div [ Attrs.class "has-text-weight-bold" ] [ Html.text "Vert" ]
-                                , Html.div [] [ Html.text "scrollTop: ", Html.text (String.fromInt (Detector.scrollTop model.scrollState)) ]
-                                , Html.div [] [ Html.text "inertialY: ", Html.text (Detector.inertialY model.scrollState |> directionToString) ]
-                                , Html.div [] [ Html.text "stickyY: ", Html.text (Detector.stickyY model.scrollState |> directionToString) ]
+                                , Html.div [] [ Html.text "scrollTop: ", Html.br [] [], Html.text (String.fromInt (Detector.scrollTop model.scrollState)) ]
+                                , Html.div [] [ Html.text "inertialY: ", Html.br [] [], Html.text (Detector.inertialY model.scrollState |> directionToString) ]
+                                , Html.div [] [ Html.text "stickyY: ", Html.br [] [], Html.text (Detector.stickyY model.scrollState |> directionToString) ]
                                 ]
                             ]
                         ]
@@ -98,7 +107,7 @@ view model =
                     [ Html.div [ Attrs.class "column is-half" ]
                         [ Html.div
                             (Attrs.class "is-scrollable content"
-                                :: Detector.onInertialScroll Scrolled
+                                :: Detector.onInertialScroll model.scrollState
                             )
                             (List.repeat 100 (Html.p [] [ Html.text longText ]))
                         ]
