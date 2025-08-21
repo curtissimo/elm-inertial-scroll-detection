@@ -642,6 +642,9 @@ update msg state =
             , Cmd.none
             )
 
+        ( _, CheckScrollEnd _ ) ->
+            ( state, Cmd.none )
+
         ( _, Scroll _ ) ->
             ( updateGeneral { fromScroll = True, values = eventData msg } state
             , Cmd.none
